@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+	font-family: Arial;
+	color: white;
+}
+
+.split {
+	height: 100%;
+	width: 50%;
+	position: fixed;
+	z-index: 1;
+	top: 0;
+	overflow-x: hidden;
+	padding-top: 20px;
+}
+
+.left {
+	left: 0;
+	background-color: #111;
+}
+
+.right {
+	right: 0;
+	background-color: #111;
+}
+
+.centered {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	text-align: center;
+}
+
+.centered img {
+	width: 150px;
+	border-radius: 50%;
+}
+</style>
+<title>AJAX</title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+</head>
+
+<body>
+
+
+	<div class="split left">
+		<h1>Cincinnati Weather Details</h1>
+
+		<p>Select the date below for forecast details</p>
+		<div>
+
+			<input type="date" id="myDate">
+			<button onclick="loadJSON()">Get Weather Details</button>
+
+		</div>
+		<canvas id="myChart" width="10" height="25" style="padding-top: 50px"></canvas>
+	</div>
+
+	<div class="split right">
+		<div style="padding-top: 120px">
+			<button onclick="loadJSONTP()">Click here for Third Party
+				Forecast</button>
+
+		</div>
+		<canvas id="tpChart" width="10" height="25" style="padding-top: 50px"></canvas>
+	</div>
+
+	<script>
+		function loadJSON() {
+			var canvas1 = document.getElementById("myChart");
+			canvas1.style.width = 20;
+			canvas1.style.height = 10;
+			canvas1.width = 50;
+			canvas1.height = 25;
+			var xhttp = new XMLHttpRequest();
+
+			xhttp.onreadystatechange = function() {
+
+				if (xhttp.readyState == 4) {
+
+					var jsonObj = JSON.parse(xhttp.responseText);
+					var date = [];
+					var tMax = [];
+					var tMin = [];
+
+					for (x in jsonObj) {
+						date.push(jsonObj[x].DATE);
+						tMax.push(jsonObj[x].TMAX);
+						tMin.push(jsonObj[x].TMIN);
+
+					}
+					var ctx = document.getElementById("myChart");
+					var myChart = new Chart(ctx, {
+						type : 'line',
+						data : {
+							labels : date,
+							datasets : [ {
+								data : tMax,
+								label : "TMAX",
+								borderColor : "#ff0000",
+								fill : false
+							}, {
+								data : tMin,
+								label : "TMIN",
+								borderColor : "#00cc66",
+								fill : false
+							} ]
+						}
+					});
+
+				}
+			}
+			var apiLink = "http://ec2-18-188-50-17.us-east-2.compute.amazonaws.com:8080/weather/forecast/"
+					+ document.getElementById("myDate").value.replace("-", "")
+							.replace("-", "");
+
+			xhttp.open("GET", apiLink, true);
+			xhttp.setRequestHeader("Content-type",
+					"application/x-www-form-urlencoded");
+			xhttp.send();
+		}
+
+		function loadJSONTP() {
+
+			var canvas = document.getElementById("tpChart");
+			canvas.style.width = 40;
+			canvas.style.height = 20;
+			canvas.width = 100;
+			canvas.height = 50;
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.onreadystatechange = function() {
+				if (this.readyState == 4) {
+					var jsonObj = JSON.parse(xmlhttp.responseText);
+					var dateTP = [];
+					var TmaxTP = [];
+					var TminTP = [];
+					for (i = 0; i < 5; i++) {
+						dateTP
+								.push(jsonObj.forecast.simpleforecast.forecastday[i].date.year
+										+ "0"
+										+ jsonObj.forecast.simpleforecast.forecastday[i].date.month
+										+ ""
+										+ jsonObj.forecast.simpleforecast.forecastday[i].date.day);
+						TmaxTP
+								.push(jsonObj.forecast.simpleforecast.forecastday[i].high.fahrenheit);
+						TminTP
+								.push(jsonObj.forecast.simpleforecast.forecastday[i].low.fahrenheit);
+					}
+
+					var ctx1 = document.getElementById("tpChart");
+					var tpChart = new Chart(ctx1, {
+						type : 'line',
+						data : {
+							labels : dateTP,
+							datasets : [ {
+								data : TmaxTP,
+								label : "TMAX",
+								borderColor : "#ff0000",
+								fill : false
+							}, {
+								data : TminTP,
+								label : "TMIN",
+								borderColor : "#00cc66",
+								fill : false
+							} ]
+						}
+					});
+
+				}
+			};
+			xmlhttp
+					.open(
+							"GET",
+							"http://api.wunderground.com/api/11184d8bb1674e44/forecast10day/q/OH/Cincinnati.json",
+							true);
+			xmlhttp.setRequestHeader("Content-type",
+					"application/x-www-form-urlencoded");
+			xmlhttp.send();
+		}
+	</script>
+
+</body>
+</html>
